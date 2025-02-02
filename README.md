@@ -17,7 +17,7 @@
 ## 環境構築
 ### 1. リポジトリのクローン
 ```sh
-git clone https://github.com/studynext
+git clone https://github.com/ktaisei/studynext
 cd studynext
 ```
 
