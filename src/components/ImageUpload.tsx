@@ -21,16 +21,20 @@ export default function ImageUpload({ images, onImagesChange }: ImageUploadProps
       try {
         const fileExt = file.name.split('.').pop();
         const fileName = `${uuidv4()}.${fileExt}`;
-        const filePath = `public/${fileName}`;
+        const filePath = `${fileName}`; // Removed 'public/' prefix
 
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError, data } = await supabase.storage
           .from('images')
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage.from('images').getPublicUrl(filePath);
-        newImages.push(data.publicUrl);
+        if (data) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('images')
+            .getPublicUrl(data.path);
+          newImages.push(publicUrl);
+        }
       } catch (error) {
         console.error('Error uploading image:', error);
       }
@@ -54,10 +58,11 @@ export default function ImageUpload({ images, onImagesChange }: ImageUploadProps
           <div key={url} className="relative">
             <img
               src={url}
-              alt="Uploaded content"
+              alt={`Uploaded content ${index + 1}`}
               className="w-32 h-32 object-cover rounded-lg"
             />
             <button
+              type="button" // Added type="button" to prevent form submission
               onClick={() => handleRemove(index)}
               className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
             >
@@ -77,6 +82,7 @@ export default function ImageUpload({ images, onImagesChange }: ImageUploadProps
           className="hidden"
         />
         <button
+          type="button" // Added type="button" to prevent form submission
           onClick={() => fileInputRef.current?.click()}
           className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
         >

@@ -31,6 +31,7 @@ export default function MathKeyboard({ onInsert }: MathKeyboardProps) {
         {symbols.map((symbol, index) => (
           <button
             key={index}
+            type="button" // Added type="button" to prevent form submission
             onClick={() => onInsert(symbol.value)}
             className="p-2 border rounded hover:bg-gray-50 transition-colors"
           >

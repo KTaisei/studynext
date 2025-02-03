@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, LogIn, LogOut, PlusCircle } from 'lucide-react';
+import { BookOpen, LogIn, LogOut, PlusCircle, User } from 'lucide-react';
 
 export default function Navbar() {
   const { user, signOut } = useAuth();
@@ -23,14 +23,21 @@ export default function Navbar() {
                   className="flex items-center space-x-1 text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md"
                 >
                   <PlusCircle className="h-5 w-5" />
-                  <span>質問する</span>
+                  <span className="hidden sm:inline">質問する</span>
+                </Link>
+                <Link
+                  to="/profile"
+                  className="flex items-center space-x-1 text-gray-600 hover:text-gray-800"
+                >
+                  <User className="h-5 w-5" />
+                  <span className="hidden sm:inline">マイページ</span>
                 </Link>
                 <button
                   onClick={() => signOut()}
                   className="flex items-center space-x-1 text-gray-600 hover:text-gray-800"
                 >
                   <LogOut className="h-5 w-5" />
-                  <span>ログアウト</span>
+                  <span className="hidden sm:inline">ログアウト</span>
                 </button>
               </>
             ) : (
@@ -39,7 +46,7 @@ export default function Navbar() {
                 className="flex items-center space-x-1 text-gray-600 hover:text-gray-800"
               >
                 <LogIn className="h-5 w-5" />
-                <span>ログイン</span>
+                <span className="hidden sm:inline">ログイン</span>
               </Link>
             )}
           </div>
