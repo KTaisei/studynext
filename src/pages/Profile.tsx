@@ -29,15 +29,33 @@ export default function Profile() {
       if (!user) return;
 
       try {
-        // Fetch user stats
+        // First ensure user stats exist
+        const { error: initError } = await supabase
+          .from('user_stats')
+          .upsert({ user_id: user.id })
+          .select()
+          .single();
+
+        if (initError && initError.code !== 'PGRST116') {
+          console.error('Error initializing user stats:', initError);
+        }
+
+        // Then fetch user stats
         const { data: statsData } = await supabase
           .from('user_stats')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (statsData) {
           setStats(statsData);
+        } else {
+          // Set default stats if none exist
+          setStats({
+            questions_count: 0,
+            answers_count: 0,
+            helpful_votes: 0
+          });
         }
 
         // Fetch user's questions

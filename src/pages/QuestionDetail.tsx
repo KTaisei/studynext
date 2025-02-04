@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { format } from 'date-fns';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, ThumbsUp } from 'lucide-react';
 import { BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 import ImageUpload from '../components/ImageUpload';
@@ -27,6 +27,8 @@ interface Answer {
   images: string[];
   math_content: string;
   created_at: string;
+  likes_count: number;
+  user_has_liked: boolean;
   profiles: {
     username: string;
   };
@@ -64,18 +66,24 @@ export default function QuestionDetail() {
         .from('answers')
         .select(`
           *,
-          profiles:user_id(username)
+          profiles:user_id(username),
+          likes:answer_likes(user_id)
         `)
         .eq('question_id', id)
         .order('created_at', { ascending: true });
 
       if (answersData) {
-        setAnswers(answersData);
+        const formattedAnswers = answersData.map(answer => ({
+          ...answer,
+          likes_count: answer.likes?.length || 0,
+          user_has_liked: answer.likes?.some(like => like.user_id === user?.id) || false
+        }));
+        setAnswers(formattedAnswers);
       }
     }
 
     fetchQuestionAndAnswers();
-  }, [id]);
+  }, [id, user?.id]);
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,13 +109,49 @@ export default function QuestionDetail() {
 
       if (insertError) throw insertError;
       if (data) {
-        setAnswers([...answers, data]);
+        const newAnswerWithLikes = {
+          ...data,
+          likes_count: 0,
+          user_has_liked: false
+        };
+        setAnswers([...answers, newAnswerWithLikes]);
         setNewAnswer('');
         setAnswerImages([]);
         setMathInput('');
       }
     } catch (err) {
       setError('回答の投稿に失敗しました。');
+    }
+  };
+
+  const handleToggleLike = async (answerId: string, currentLiked: boolean) => {
+    if (!user) return;
+
+    try {
+      if (currentLiked) {
+        await supabase
+          .from('answer_likes')
+          .delete()
+          .eq('answer_id', answerId)
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('answer_likes')
+          .insert([{ answer_id: answerId, user_id: user.id }]);
+      }
+
+      setAnswers(answers.map(answer => {
+        if (answer.id === answerId) {
+          return {
+            ...answer,
+            likes_count: currentLiked ? answer.likes_count - 1 : answer.likes_count + 1,
+            user_has_liked: !currentLiked
+          };
+        }
+        return answer;
+      }));
+    } catch (err) {
+      console.error('Error toggling like:', err);
     }
   };
 
@@ -187,10 +231,23 @@ export default function QuestionDetail() {
                 </div>
               )}
 
-              <div className="text-sm text-gray-500">
-                <span className="font-medium">{answer.profiles.username}</span>
-                <span className="mx-2">•</span>
-                <span>{format(new Date(answer.created_at), 'yyyy/MM/dd HH:mm')}</span>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-500">
+                  <span className="font-medium">{answer.profiles.username}</span>
+                  <span className="mx-2">•</span>
+                  <span>{format(new Date(answer.created_at), 'yyyy/MM/dd HH:mm')}</span>
+                </div>
+                <button
+                  onClick={() => handleToggleLike(answer.id, answer.user_has_liked)}
+                  className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
+                    answer.user_has_liked
+                      ? 'bg-indigo-100 text-indigo-600'
+                      : 'text-gray-500 hover:text-indigo-600'
+                  }`}
+                >
+                  <ThumbsUp className="h-4 w-4" />
+                  <span>{answer.likes_count}</span>
+                </button>
               </div>
             </div>
           ))}
