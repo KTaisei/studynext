@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, BookOpen } from 'lucide-react';
 import { BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 import ImageUpload from '../components/ImageUpload';
 import MathKeyboard from '../components/MathKeyboard';
+
+interface Subject {
+  id: string;
+  name: string;
+}
 
 export default function AskQuestion() {
   const [title, setTitle] = useState('');
@@ -15,8 +20,32 @@ export default function AskQuestion() {
   const [mathInput, setMathInput] = useState('');
   const [showMathKeyboard, setShowMathKeyboard] = useState(false);
   const [error, setError] = useState('');
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>('');
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchSubjects() {
+      try {
+        const { data } = await supabase
+          .from('subjects')
+          .select('*')
+          .order('name');
+        
+        if (data) {
+          setSubjects(data);
+          if (data.length > 0) {
+            setSelectedSubject(data[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching subjects:', err);
+      }
+    }
+
+    fetchSubjects();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +61,7 @@ export default function AskQuestion() {
             content,
             images,
             math_content: mathInput,
+            subject_id: selectedSubject,
           },
         ])
         .select()
@@ -77,6 +107,29 @@ export default function AskQuestion() {
               placeholder="質問のタイトルを入力してください"
               required
             />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              教科
+            </label>
+            <div className="relative">
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-white"
+                required
+              >
+                {subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <BookOpen className="h-5 w-5 text-gray-400" />
+              </div>
+            </div>
           </div>
 
           <div className="mb-6">

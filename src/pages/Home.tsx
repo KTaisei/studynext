@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, ThumbsUp } from 'lucide-react';
 import SubjectFilter from '../components/SubjectFilter';
 import RankingList from '../components/RankingList';
 

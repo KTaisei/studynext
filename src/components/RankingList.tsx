@@ -1,46 +1,61 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Trophy, Medal } from 'lucide-react';
+import { Trophy, MessageCircle, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { format } from 'date-fns';
 
-interface UserRanking {
-  username: string;
-  helpful_votes: number;
-  questions_count: number;
+interface QuestionRanking {
+  id: string;
+  title: string;
   answers_count: number;
+  created_at: string;
+  profiles: {
+    username: string;
+  };
+  subjects: {
+    name: string;
+  } | null;
 }
 
 export default function RankingList() {
-  const [rankings, setRankings] = useState<UserRanking[]>([]);
+  const [topQuestions, setTopQuestions] = useState<QuestionRanking[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchRankings() {
+    async function fetchTopQuestions() {
       try {
+        // First, get all questions with their answer counts
         const { data } = await supabase
-          .from('user_stats')
+          .from('questions')
           .select(`
-            helpful_votes,
-            questions_count,
-            answers_count,
-            profiles:user_id(username)
-          `)
-          .order('helpful_votes', { ascending: false })
-          .limit(10);
+            id,
+            title,
+            created_at,
+            profiles:user_id(username),
+            subjects:subject_id(name),
+            answers(id)
+          `);
 
         if (data) {
-          setRankings(data.map(item => ({
-            ...item,
-            username: item.profiles.username
-          })));
+          // Sort questions by answer count and take top 10
+          const sortedQuestions = data
+            .map(question => ({
+              ...question,
+              answers_count: question.answers.length
+            }))
+            .sort((a, b) => b.answers_count - a.answers_count)
+            .slice(0, 10);
+
+          setTopQuestions(sortedQuestions);
         }
       } catch (error) {
-        console.error('Error fetching rankings:', error);
+        console.error('Error fetching top questions:', error);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchRankings();
+    fetchTopQuestions();
   }, []);
 
   if (loading) {
@@ -51,44 +66,43 @@ export default function RankingList() {
     );
   }
 
-  const getRankIcon = (index: number) => {
-    switch (index) {
-      case 0:
-        return <Trophy className="h-6 w-6 text-yellow-400" />;
-      case 1:
-        return <Medal className="h-6 w-6 text-gray-400" />;
-      case 2:
-        return <Medal className="h-6 w-6 text-amber-600" />;
-      default:
-        return <span className="text-lg font-bold text-gray-500">{index + 1}</span>;
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">ランキング</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <Trophy className="h-6 w-6 text-amber-500 mr-2" />
+        回答数ランキング
+      </h2>
       <div className="space-y-4">
-        {rankings.map((user, index) => (
-          <div
-            key={user.username}
-            className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+        {topQuestions.map((question, index) => (
+          <Link
+            key={question.id}
+            to={`/question/${question.id}`}
+            className="block p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
           >
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center justify-center w-8">
-                {getRankIcon(index)}
+            <div className="flex items-start space-x-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-full flex-shrink-0">
+                <span className="text-sm font-bold">{index + 1}</span>
               </div>
-              <div>
-                <p className="font-medium text-gray-900">{user.username}</p>
-                <p className="text-sm text-gray-600">
-                  質問: {user.questions_count} | 回答: {user.answers_count}
-                </p>
+              <div className="flex-grow">
+                <h3 className="text-gray-900 font-medium mb-1 line-clamp-2">
+                  {question.title}
+                </h3>
+                <div className="flex items-center text-sm text-gray-600 space-x-3">
+                  <span>{question.profiles.username}</span>
+                  <span>{format(new Date(question.created_at), 'yyyy/MM/dd')}</span>
+                  {question.subjects && (
+                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded">
+                      {question.subjects.name}
+                    </span>
+                  )}
+                  <div className="flex items-center text-amber-600">
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    <span>{question.answers_count}</span>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2 text-amber-600">
-              <Trophy className="h-4 w-4" />
-              <span className="font-bold">{user.helpful_votes}</span>
-            </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
