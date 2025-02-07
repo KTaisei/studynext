@@ -154,7 +154,7 @@ function App() {
                   />
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-blue-600" style={{ fontFamily: 'cursive' }}>
-                  川上　泰正
+                  川上 泰正
                 </h3>
                 <p className="text-gray-600 mb-6" style={{ fontFamily: 'cursive' }}>
                     普段はフロントエンドエンジニアとして、ホームページやwebアプリの開発を行なっています。
