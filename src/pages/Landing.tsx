@@ -83,22 +83,22 @@ function App() {
         </nav>
 
         {/* Hero Section */}
-        <div className="max-w-7xl mx-auto px-6 pt-20">
-          <div className="border-b-2 border-blue-200 pb-12">
-            <h1 className="text-5xl mb-6 text-blue-600" style={{ fontFamily: 'cursive' }}>
-                今日の『なぜ？』が、
-              <br />
-              明日の力になる。
-            </h1>
-            <p className="text-xl text-gray-700 mb-8 max-w-2xl" style={{ fontFamily: 'cursive' }}>
-               学びは、ひとつじゃない。つながることで広がっていく。
-               Study Nextは、お互いで高め合い、学び合うためのコミュニティです。
-            </p>
-            <button className="px-8 py-3 bg-blue-600 text-white rounded text-lg font-semibold hover:bg-blue-700 transition flex items-center space-x-2">
-              <Link to="/register">始めてみる</Link>
-              <ArrowRight className="h-5 w-5" />
-            </button>
-          </div>
+        <div className="max-w-7xl mx-auto px-6 pt-20 text-center sm:text-left">
+            <div className="border-b-2 border-blue-200 pb-12">
+                <h1 className="text-3xl sm:text-5xl mb-6 text-blue-600" style={{ fontFamily: 'cursive' }}>
+                    今日の『なぜ？』が、
+                <br  />
+                    明日の力になる。
+                </h1>
+                <p className="text-lg sm:text-xl text-gray-700 mb-8 max-w-md sm:max-w-2xl mx-auto sm:mx-0" style={{ fontFamily: 'cursive' }}>
+                    学びは、ひとつじゃない。つながることで広がっていく。
+                    Study Nextは、お互いで高め合い、学び合うためのコミュニティです。
+                </p>
+                <button className="px-6 py-2 sm:px-8 sm:py-3 bg-blue-600 text-white rounded text-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center space-x-2 mx-auto sm:mx-0">
+                    <Link to="/register">始めてみる</Link>
+                    <ArrowRight className="h-5 w-5" />
+                </button>
+            </div>
         </div>
 
         {/* Features */}
